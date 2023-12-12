@@ -55,6 +55,11 @@ cartsRouter.post('/:cid/product/:pid', (req, res) => {
         const { cid, pid } = req.params;
         const { quantity } = req.body;
 
+        // Validar si la cantidad es un número entero positivo
+        if (!Number.isInteger(quantity) || quantity <= 0) {
+            return res.status(400).json({ error: "La cantidad debe ser un número entero positivo." });
+        }
+
         // Obtener la información del carrito con el id proporcionado
         const carts = JSON.parse(fs.readFileSync(cartsFilePath, 'utf-8'));
         const cart = carts.find(cart => cart.id === cid);

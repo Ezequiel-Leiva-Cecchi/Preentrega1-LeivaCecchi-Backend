@@ -49,9 +49,14 @@ productsRouter.post('/', (req, res) => {
         // Extrae datos del cuerpo de la solicitud
         const { title, description, code, price, status, stock, category } = req.body;
 
-        // Verifica que todos los campos obligatorios estén presentes
-        if (!title || !description || !code || !price || !stock || !category) {
-            return res.status(400).json({ error: "Todos los campos son obligatorios." });
+        // Validaciones de tipo
+        if (typeof price !== 'number' || typeof status !== 'boolean' || typeof stock !== 'number') {
+            return res.status(400).json({ error: "El precio debe ser un número, el estado debe ser un booleano y el stock debe ser un número." });
+        }
+
+        // Validaciones de campos no vacíos o solo espacios en blanco
+        if (![title, description, code, category].every(field => typeof field === 'string' && field.trim() !== '')) {
+            return res.status(400).json({ error: "Los campos 'title', 'description', 'code' y 'category' son obligatorios y no pueden estar vacíos." });
         }
 
         // Lee el archivo JSON que contiene la información de los productos
@@ -103,9 +108,16 @@ productsRouter.put('/:pid', (req, res) => {
             return res.status(404).json({ error: "Producto no encontrado." });
         }
 
+        // Validación de campos no vacíos o solo espacios en blanco
+        for (const key in updatedProductData) {
+            if (updatedProductData.hasOwnProperty(key) && typeof updatedProductData[key] === 'string' && updatedProductData[key].trim() === '') {
+                return res.status(400).json({ error: `El campo ${key} no puede estar vacío.` });
+            }
+        }
+
         // No actualiza el ID y asigna los nuevos datos al producto existente
         updatedProductData.id = pid;
-        products[productIndex] = updatedProductData;
+        Object.assign(products[productIndex], updatedProductData);
 
         // Actualiza el archivo JSON con la nueva lista de productos
         fs.writeFileSync(productsFilePath, JSON.stringify(products, null, 2));
